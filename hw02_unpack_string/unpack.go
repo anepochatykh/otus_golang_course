@@ -39,15 +39,14 @@ func Unpack(inp string) (string, error) {
 	prevSymbol := ""
 	for _, r := range inp {
 		if unicode.IsDigit(r) {
-			multiplier, _ := strconv.Atoi(string(r))
-			// if err != nil {
-			//	  fmt.Printf(err)
-			// }
+			multiplier, err := strconv.Atoi(string(r))
+			if err != nil {
+				return "", ErrInvalidString
+			}
 			for i := 0; i < multiplier; i++ {
 				b.WriteString(prevSymbol)
 			}
 			prevSymbol = ""
-			multiplier = -1
 		} else {
 			if prevSymbol != "" && multiplier == -1 {
 				b.WriteString(prevSymbol)
