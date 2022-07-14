@@ -21,9 +21,8 @@ func min(a, b int) int {
 }
 
 // Get token frequency as a map.
-func getTokenFrequency(inp string) map[string]int32 {
+func getTokenFrequency(inp string, r *regexp.Regexp) map[string]int32 {
 	tokenFrequency := make(map[string]int32)
-	r := regexp.MustCompile("[a-яА-Я-]+")
 	tokens := strings.Fields(inp)
 	for _, t := range tokens {
 		if r.MatchString(t) {
@@ -62,8 +61,9 @@ func getTopWords(wordCounts []wordCountStruct, topN int) []string {
 }
 
 func Top10(inp string) []string {
+	r := regexp.MustCompile("[a-яА-Я-]+")
 	// get token frequency as map
-	tokenFrequency := getTokenFrequency(inp)
+	tokenFrequency := getTokenFrequency(inp, r)
 	// get sorted wordCounts as a slice of wordCountStruct
 	wordCounts := getWordCounts(tokenFrequency)
 	// get max ret len
