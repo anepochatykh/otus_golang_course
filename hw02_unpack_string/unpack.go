@@ -10,6 +10,7 @@ import (
 var ErrInvalidString = errors.New("invalid string")
 
 func isValid(inp string) bool {
+	// check if inp string is valid
 	alreadyHasDigit := false
 	for i, r := range inp {
 		// check if first symbol is digit
