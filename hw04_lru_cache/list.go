@@ -22,54 +22,91 @@ type list struct {
 	tail   *ListItem
 }
 
-// Len() int
 func (l *list) Len() int {
 	return l.length
 }
 
-// Front() *ListItem
 func (l *list) Front() *ListItem {
 	if l.length == 0 {
 		return nil
 	}
-	return l.head.Next
+	return l.head
 }
 
-// Back() *ListItem
 func (l *list) Back() *ListItem {
 	if l.length == 0 {
 		return nil
 	}
-	return l.tail.Prev
+	return l.tail
 }
 
-// PushFront(v interface{}) *ListItem
 func (l *list) PushFront(v interface{}) *ListItem {
-	newItem := ListItem{Value: v.(int), Next: l.head.Next, Prev: l.head}
-	l.head.Next.Prev = &newItem
-	l.head.Next = &newItem
+	newItem := ListItem{Value: v}
+	switch l.Len() {
+	case 0:
+		l.head = &newItem
+		l.tail = &newItem
+	case 1:
+		l.head = &newItem
+		l.head.Next = l.tail
+		l.tail.Prev = l.head
+	default:
+		oldHead := l.head
+		l.head = &newItem
+		l.head.Next = oldHead
+		oldHead.Prev = l.head
+	}
 	l.length++
 	return &newItem
 }
 
-// PushBack(v interface{}) *ListItem
 func (l *list) PushBack(v interface{}) *ListItem {
-	newItem := ListItem{Value: v.(int), Next: l.tail, Prev: l.tail.Prev}
-	l.tail.Prev.Next = &newItem
-	l.tail.Prev = &newItem
+	newItem := ListItem{Value: v}
+	switch l.Len() {
+	case 0:
+		l.head = &newItem
+		l.tail = &newItem
+	case 1:
+		l.tail = &newItem
+		l.tail.Prev = l.head
+		l.head.Next = l.tail
+	default:
+		oldTail := l.tail
+		l.tail = &newItem
+		l.tail.Prev = oldTail
+		oldTail.Next = l.tail
+	}
 	l.length++
 	return &newItem
 }
 
-// Remove(i *ListItem)
 func (l *list) Remove(i *ListItem) {
-	i.Next.Prev = i.Prev
-	i.Prev.Next = i.Next
+	switch l.Len() {
+	case 0:
+		return
+	case 1:
+		if l.head == i && l.tail == i {
+			l.head = &ListItem{}
+			l.tail = &ListItem{}
+		}
+	default:
+		switch i {
+		case l.head:
+			l.head = l.head.Next
+			l.head.Prev = nil
+		case l.tail:
+			l.tail = l.tail.Prev
+			l.tail.Next = nil
+		default:
+			i.Next.Prev = i.Prev
+			i.Prev.Next = i.Next
+		}
+	}
 	l.length--
 }
 
 func (l *list) MoveToFront(i *ListItem) {
-	l.PushFront(i)
+	l.PushFront(i.Value)
 	l.Remove(i)
 }
 
@@ -78,7 +115,5 @@ func NewList() List {
 	newList.length = 0
 	newList.head = new(ListItem)
 	newList.tail = new(ListItem)
-	newList.head.Next = newList.tail
-	newList.tail.Prev = newList.head
 	return newList
 }
