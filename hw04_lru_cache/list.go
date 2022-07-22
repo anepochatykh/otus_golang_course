@@ -118,7 +118,6 @@ func (l *list) MoveToFront(i *ListItem) {
 	// todo - check if i is already a head of list
 	l.PushFront(i.Value)
 	l.Remove(i)
-
 	// fmt.Printf("List. MoveToFront all %v\n", l)
 }
 

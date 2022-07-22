@@ -55,9 +55,7 @@ func (c *lruCache) Set(key Key, value interface{}) bool {
 	return false
 }
 
-// value := node.Value.(*list.Element).Value.(KeyPair).value
 func (c *lruCache) Get(key Key) (interface{}, bool) {
-	// fmt.Printf("Inside Get. key %v, c.items: %v \n", key, c.items)
 	if currentItem, ok := c.items[key]; ok {
 		// fmt.Printf("True. currentItem  %v\n", currentItem)
 		c.queue.MoveToFront(currentItem)
