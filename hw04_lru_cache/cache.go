@@ -9,7 +9,7 @@ type Cache interface {
 }
 
 type lruCache struct {
-	Cache    // Remove me after realization.
+	Cache
 	capacity int
 	queue    List
 	items    map[Key]*ListItem
@@ -29,25 +29,19 @@ func NewCache(capacity int) Cache {
 }
 
 func (c *lruCache) Set(key Key, value interface{}) bool {
-	// fmt.Printf("Inside Set. key %v value %v\n", key, value)
 	currentItem, ok := c.items[key]
-	// newElement := cacheItem{key: key, value: value}
 	if ok {
-		// fmt.Printf("True. currentItem before. %v\n", currentItem)
-
-		// новые данные пришли - надо обновить currentItem
-		// fmt.Printf("set key is ok. %v %v %T\n", currentItem, currentItem.Value, currentItem.Value)
-
 		currentItem.Value = cacheItem{key: key, value: value}
-		// внутри листа создастся новый элемент с новыми ссылками. может пойти по другому ?
 		c.queue.MoveToFront(currentItem)
-		// node.Value.(*list.Element).Value = KeyPair{key: key, value: value}
-		// fmt.Printf("True. currentItem after. %v\n", currentItem)
 		return true
 	}
 
-	// todo - check for capacity
-	// delete if capacity is full
+	if len(c.items) == c.capacity {
+		tail := c.queue.Back()
+		keyToDel := tail.Value.(cacheItem).key
+		c.queue.Remove(tail)
+		delete(c.items, keyToDel)
+	}
 
 	cacheItemValue := cacheItem{key: key, value: value}
 	newCurrentItem := c.queue.PushFront(cacheItemValue)
@@ -57,14 +51,13 @@ func (c *lruCache) Set(key Key, value interface{}) bool {
 
 func (c *lruCache) Get(key Key) (interface{}, bool) {
 	if currentItem, ok := c.items[key]; ok {
-		// fmt.Printf("True. currentItem  %v\n", currentItem)
 		c.queue.MoveToFront(currentItem)
 		return currentItem.Value.(cacheItem).value, ok
 	}
-	// fmt.Printf("False. \n")
 	return nil, false
 }
 
 func (c *lruCache) Clear() {
-	// delete(c.queue, )
+	c.queue = NewList()
+	c.items = make(map[Key]*ListItem, c.capacity)
 }
