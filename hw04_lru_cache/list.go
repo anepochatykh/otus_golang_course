@@ -57,6 +57,7 @@ func (l *list) PushFront(v interface{}) *ListItem {
 		oldHead.Prev = l.head
 	}
 	l.length++
+	// fmt.Printf("List.PushFront finish. newItem %v, list %v\n", newItem, l)
 	return &newItem
 }
 
@@ -81,6 +82,7 @@ func (l *list) PushBack(v interface{}) *ListItem {
 }
 
 func (l *list) Remove(i *ListItem) {
+	// fmt.Printf("inside remove : %v %v %v %v\n", i, l.head, l.tail, l.length)
 	switch l.Len() {
 	case 0:
 		return
@@ -98,16 +100,26 @@ func (l *list) Remove(i *ListItem) {
 			l.tail = l.tail.Prev
 			l.tail.Next = nil
 		default:
-			i.Next.Prev = i.Prev
-			i.Prev.Next = i.Next
+			// fmt.Printf("inside remove : %v\n", i)
+			if i.Next != nil {
+				i.Next.Prev = i.Prev
+			}
+			if i.Prev != nil {
+				i.Prev.Next = i.Next
+			}
 		}
 	}
 	l.length--
 }
 
 func (l *list) MoveToFront(i *ListItem) {
+	// fmt.Printf("List. MoveToFront i: %v, list: %v\n", i, l)
+	// fmt.Printf("List. MoveToFront value %v\n", i.Value)
+	// todo - check if i is already a head of list
 	l.PushFront(i.Value)
 	l.Remove(i)
+
+	// fmt.Printf("List. MoveToFront all %v\n", l)
 }
 
 func NewList() List {
