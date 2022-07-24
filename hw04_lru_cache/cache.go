@@ -37,18 +37,21 @@ func (c *lruCache) Set(key Key, value interface{}) bool {
 	defer c.mu.Unlock()
 	currentItem, ok := c.items[key]
 	if ok {
+		// rewrite new value with key and move front
 		currentItem.Value = cacheItem{key: key, value: value}
 		c.queue.MoveToFront(currentItem)
 		return true
 	}
 
 	if len(c.items) == c.capacity {
+		// if items is enough, must remove the least used value
 		tail := c.queue.Back()
 		keyToDel := tail.Value.(cacheItem).key
 		c.queue.Remove(tail)
 		delete(c.items, keyToDel)
 	}
 
+	// have not seen value - add new
 	cacheItemValue := cacheItem{key: key, value: value}
 	newCurrentItem := c.queue.PushFront(cacheItemValue)
 	c.items[key] = newCurrentItem
@@ -59,6 +62,7 @@ func (c *lruCache) Get(key Key) (interface{}, bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if currentItem, ok := c.items[key]; ok {
+		// take element if had one
 		c.queue.MoveToFront(currentItem)
 		return currentItem.Value.(cacheItem).value, ok
 	}
