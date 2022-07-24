@@ -88,6 +88,14 @@ func TestCache(t *testing.T) {
 		// cache - eee ddd bbbb
 		_, ok = c.Get("ccc")
 		require.False(t, ok)
+
+		// cache - empty
+		c.Clear()
+
+		// cache - eee
+		wasInCache = c.Set("eee", 100000)
+		require.False(t, wasInCache)
+
 	})
 }
 
