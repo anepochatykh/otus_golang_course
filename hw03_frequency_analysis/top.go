@@ -1,6 +1,7 @@
 package hw03frequencyanalysis
 
 import (
+	"math"
 	"regexp"
 	"sort"
 	"strings"
@@ -12,13 +13,6 @@ type wordCountStruct struct {
 }
 
 const TopNumber = 10
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
 
 var globalRegexp = regexp.MustCompile("[a-яА-Я-]+")
 
@@ -68,7 +62,7 @@ func Top10(inp string) []string {
 	// get sorted wordCounts as a slice of wordCountStruct
 	wordCounts := getWordCounts(tokenFrequency)
 	// get max ret len
-	maxRetLen := min(TopNumber, len(wordCounts))
+	maxRetLen := math.Min(float64(TopNumber), float64(len(wordCounts)))
 	// get topN words with max frequency
-	return getTopWords(wordCounts, maxRetLen)
+	return getTopWords(wordCounts, int(maxRetLen))
 }
