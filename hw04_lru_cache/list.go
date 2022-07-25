@@ -27,16 +27,10 @@ func (l *list) Len() int {
 }
 
 func (l *list) Front() *ListItem {
-	if l.length == 0 {
-		return nil
-	}
 	return l.head
 }
 
 func (l *list) Back() *ListItem {
-	if l.length == 0 {
-		return nil
-	}
 	return l.tail
 }
 
@@ -81,15 +75,15 @@ func (l *list) PushBack(v interface{}) *ListItem {
 }
 
 func (l *list) Remove(i *ListItem) {
-	switch l.Len() {
-	case 0:
+	if l.Len() == 0 {
 		return
-	case 1:
+	}
+	if l.Len() == 1 {
 		if l.head == i && l.tail == i {
-			l.head = &ListItem{}
-			l.tail = &ListItem{}
+			l.head = nil
+			l.tail = nil
 		}
-	default:
+	} else {
 		switch i {
 		case l.head:
 			l.head = l.head.Next
@@ -117,7 +111,7 @@ func (l *list) MoveToFront(i *ListItem) {
 func NewList() List {
 	newList := new(list)
 	newList.length = 0
-	newList.head = new(ListItem)
-	newList.tail = new(ListItem)
+	newList.head = nil
+	newList.tail = nil
 	return newList
 }
