@@ -10,18 +10,21 @@ var ErrErrorsLimitExceeded = errors.New("errors limit exceeded")
 type Task func() error
 
 // increment and check if maxError exceeded.
-func limitedIncrement(m *sync.Mutex, errorsTotal *int, maxError int) bool {
+func limitedIncrement(m *sync.Mutex, errorsTotal *int, maxErrorLimit int) bool {
 	m.Lock()
 	defer m.Unlock()
 	*errorsTotal++
-	return *errorsTotal < maxError
+	if maxErrorLimit > 0 {
+		return *errorsTotal < maxErrorLimit
+	}
+	return true
 }
 
-func worker(w *sync.WaitGroup, m *sync.Mutex, in chan Task, errorsTotal *int, maxError int) {
+func worker(w *sync.WaitGroup, m *sync.Mutex, in chan Task, errorsTotal *int, maxErrorLimit int) {
 	defer w.Done()
 	for task := range in {
 		if err := task(); err != nil {
-			if !limitedIncrement(m, errorsTotal, maxError) {
+			if !limitedIncrement(m, errorsTotal, maxErrorLimit) {
 				return
 			}
 		}
@@ -30,14 +33,19 @@ func worker(w *sync.WaitGroup, m *sync.Mutex, in chan Task, errorsTotal *int, ma
 
 // Run starts tasks in n goroutines and stops its work when receiving m errors from tasks.
 func Run(tasks []Task, n, m int) error {
-	// todo - m < 0
+	// handle m <= 0 input value
+	maxErrorLimit := m
+	if m <= 0 {
+		maxErrorLimit = -1
+	}
 
-	w := &sync.WaitGroup{}
+	// init sync primitives
 	mut := &sync.Mutex{}
+	w := &sync.WaitGroup{}
 	w.Add(n) // no more than n tasks
-	inChannels := make(chan Task, len(tasks))
 
 	// push tasks to channels
+	inChannels := make(chan Task, len(tasks))
 	for i := 0; i < len(tasks); i++ {
 		inChannels <- tasks[i]
 	}
@@ -46,13 +54,13 @@ func Run(tasks []Task, n, m int) error {
 	// start workers
 	var errorsTotal int
 	for i := 0; i < n; i++ {
-		go worker(w, mut, inChannels, &errorsTotal, m)
+		go worker(w, mut, inChannels, &errorsTotal, maxErrorLimit)
 	}
 	w.Wait()
 
 	// return
 	var result error
-	if errorsTotal >= m {
+	if maxErrorLimit > 0 && errorsTotal >= maxErrorLimit {
 		result = ErrErrorsLimitExceeded
 	}
 	return result
