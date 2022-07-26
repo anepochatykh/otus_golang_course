@@ -9,26 +9,21 @@ var ErrErrorsLimitExceeded = errors.New("errors limit exceeded")
 
 type Task func() error
 
-func safeIncrement(m *sync.Mutex, errorsTotal *int) {
+// increment and check if maxError exceeded.
+func limitedIncrement(m *sync.Mutex, errorsTotal *int, maxError int) bool {
 	m.Lock()
 	defer m.Unlock()
 	*errorsTotal++
-}
-
-func ifErrorsExceed(m *sync.Mutex, errorsTotal *int, maxError int) bool {
-	m.Lock()
-	defer m.Unlock()
-	return *errorsTotal >= maxError
+	return *errorsTotal < maxError
 }
 
 func worker(w *sync.WaitGroup, m *sync.Mutex, in chan Task, errorsTotal *int, maxError int) {
 	defer w.Done()
 	for task := range in {
 		if err := task(); err != nil {
-			safeIncrement(m, errorsTotal)
-		}
-		if ifErrorsExceed(m, errorsTotal, maxError) {
-			return
+			if !limitedIncrement(m, errorsTotal, maxError) {
+				return
+			}
 		}
 	}
 }
