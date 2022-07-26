@@ -91,5 +91,4 @@ func TestRun(t *testing.T) {
 
 		require.Equal(t, runTasksCount, int32(tasksCount), "all tasks completed")
 	})
-
 }
