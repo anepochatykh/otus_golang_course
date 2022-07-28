@@ -2,14 +2,66 @@ package hw05parallelexecution
 
 import (
 	"errors"
+	"sync"
 )
 
 var ErrErrorsLimitExceeded = errors.New("errors limit exceeded")
 
 type Task func() error
 
+// increment and check if maxError exceeded.
+func limitedIncrement(m *sync.Mutex, errorsTotal *int, maxErrorLimit int) bool {
+	m.Lock()
+	defer m.Unlock()
+	*errorsTotal++
+	if maxErrorLimit > 0 {
+		return *errorsTotal < maxErrorLimit
+	}
+	return true
+}
+
+func worker(w *sync.WaitGroup, m *sync.Mutex, in chan Task, errorsTotal *int, maxErrorLimit int) {
+	defer w.Done()
+	for task := range in {
+		if err := task(); err != nil {
+			if !limitedIncrement(m, errorsTotal, maxErrorLimit) {
+				return
+			}
+		}
+	}
+}
+
 // Run starts tasks in n goroutines and stops its work when receiving m errors from tasks.
 func Run(tasks []Task, n, m int) error {
-	// Place your code here.
-	return nil
+	// handle m <= 0 input value
+	maxErrorLimit := m
+	if m <= 0 {
+		maxErrorLimit = -1
+	}
+
+	// init sync primitives
+	mut := &sync.Mutex{}
+	wg := &sync.WaitGroup{}
+	wg.Add(n) // no more than n tasks
+
+	// push tasks to channels
+	in := make(chan Task, len(tasks))
+	for i := 0; i < len(tasks); i++ {
+		in <- tasks[i]
+	}
+	close(in)
+
+	// start workers
+	var errorsTotal int
+	for i := 0; i < n; i++ {
+		go worker(wg, mut, in, &errorsTotal, maxErrorLimit)
+	}
+	wg.Wait()
+
+	// return
+	var result error
+	if maxErrorLimit > 0 && errorsTotal >= maxErrorLimit {
+		result = ErrErrorsLimitExceeded
+	}
+	return result
 }
