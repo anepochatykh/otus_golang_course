@@ -41,22 +41,22 @@ func Run(tasks []Task, n, m int) error {
 
 	// init sync primitives
 	mut := &sync.Mutex{}
-	w := &sync.WaitGroup{}
-	w.Add(n) // no more than n tasks
+	wg := &sync.WaitGroup{}
+	wg.Add(n) // no more than n tasks
 
 	// push tasks to channels
-	inChannels := make(chan Task, len(tasks))
+	in := make(chan Task, len(tasks))
 	for i := 0; i < len(tasks); i++ {
-		inChannels <- tasks[i]
+		in <- tasks[i]
 	}
-	close(inChannels)
+	close(in)
 
 	// start workers
 	var errorsTotal int
 	for i := 0; i < n; i++ {
-		go worker(w, mut, inChannels, &errorsTotal, maxErrorLimit)
+		go worker(wg, mut, in, &errorsTotal, maxErrorLimit)
 	}
-	w.Wait()
+	wg.Wait()
 
 	// return
 	var result error
